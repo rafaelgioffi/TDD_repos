@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, send_from_directory
-from order_tracker import OrderTracker
-from in_memory_storage import InMemoryStorage
+from .order_tracker import OrderTracker
+from .in_memory_storage import InMemoryStorage
 
 app = Flask(__name__, static_folder='../frontend')
 in_memory_storage = InMemoryStorage()
@@ -19,7 +19,7 @@ def add_order_api():
     data = request.get_json()
 
     try:
-        status_order = order_tracker.add_order(
+        order_tracker.add_order(
             order_id=data.get('order_id'),
             item_name=data.get('item_name'), 
             quantity=data.get('quantity'),

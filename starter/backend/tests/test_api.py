@@ -1,6 +1,5 @@
 import pytest
-from app import app, in_memory_storage
-import app
+from backend.app import app, in_memory_storage
 
 @pytest.fixture
 def client():

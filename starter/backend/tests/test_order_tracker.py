@@ -91,8 +91,29 @@ def test_update_status_successfully(order_tracker, mock_storage):
     mock_storage.save_order.assert_called_once()
 
 def test_update_status_with_inexistent_order(order_tracker):
-    with pytest.raises(ValueError):
-        order_tracker.update_order_status("INEXISTENT_ORDER", "completed")
+    with pytest.raises(ValueError,
+                        # match="Invalid status 'teleported'."
+                        match="Order 'INEXISTENT_ORDER' doesn't exist."):
+        # order_tracker.update_order_status("INEXISTENT_ORDER", "completed")
+        order_tracker.update_order_status(
+            # "ORD001", "teleported"
+            "INEXISTENT_ORDER", "completed"
+            )
+
+        # mock_storage.get_order.assert_not_called()
+
+def test_update_status_with_invalid_status(order_tracker, mock_storage):
+    with pytest.raises(
+        ValueError,
+        match="Invalid status 'teleported'."
+    ):
+        order_tracker.update_order_status(
+            "ORD001",
+            "teleported"
+        )
+
+    mock_storage.get_order.assert_not_called()
+
 
 def test_list_all_orders(order_tracker, mock_storage):
     mock_storage.get_all_orders.return_value = {
@@ -103,8 +124,15 @@ def test_list_all_orders(order_tracker, mock_storage):
     }
 
     orders = order_tracker.list_all_orders()
-    
-    assert orders
+
+    assert isinstance(orders, list)
+    assert len(orders) == 1
+    assert orders[0]["order_id"] == "ORD001"
+
+def test_list_all_orders_empty(order_tracker, mock_storage):
+    mock_storage.get_all_orders.return_value = {}
+
+    assert order_tracker.list_all_orders() == []
 
 
 def test_list_order_by_status_successfully(order_tracker, mock_storage):
@@ -112,15 +140,37 @@ def test_list_order_by_status_successfully(order_tracker, mock_storage):
         "ORD001": {
             "order_id": "ORD001",
             "status": "completed"
+        },
+        "ORD002": {
+            "order_id": "ORD002",
+            "status": "shipped"
+        },
+        "ORD003": {
+            "order_id": "ORD003",
+            "status": "shipped"
         }
     }
 
-    orders = order_tracker.list_orders_by_status("completed")
+    orders = order_tracker.list_orders_by_status("shipped")
 
-    assert len(orders) == 1
-    assert orders[0]["order_id"] == "ORD001"
+    assert len(orders) == 2
+    assert all(order["status"] == "shipped" for order in orders)
+
+
+def test_list_orders_by_status_without_matches(
+    order_tracker,
+    mock_storage
+):
+    mock_storage.get_all_orders.return_value = {
+        "ORD001": {
+            "order_id": "ORD001",
+            "status": "pending"
+        }
+    }
+
+    assert order_tracker.list_orders_by_status("shipped") == []
 
 
 def test_list_order_by_status_inexistent(order_tracker):
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Invalid status 'INEXISTENT_STATUS'."):
         order_tracker.list_orders_by_status("INEXISTENT_STATUS")
