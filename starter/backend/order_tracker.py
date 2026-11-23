@@ -14,16 +14,54 @@ class OrderTracker:
         self.storage = storage
 
     def add_order(self, order_id: str, item_name: str, quantity: int, customer_id: str, status: str = "pending"):
-        pass
+        # validate before...
+        if self.storage.get_order(order_id):
+            raise ValueError(f"Order '{order_id}' already exists.")
+
+        order = {
+            "order_id": order_id,
+            "item_name": item_name,
+            "quantity": quantity,
+            "customer_id": customer_id,
+            "status": status
+        }
+        self.storage.save_order(order_id, order)
 
     def get_order_by_id(self, order_id: str):
-        pass
+        # Validate first
+        order = self.storage.get_order(order_id)
+
+        if not order:
+            raise ValueError(f"Order '{order_id}' doesn't exist.")
+        
+        return order
 
     def update_order_status(self, order_id: str, new_status: str):
-        pass
+        # Validate first
+        retrieved_order = self.storage.get_order(order_id)
+        
+        if not retrieved_order:
+            raise ValueError(f"Order '{order_id}' doesn't exist.")
+
+        retrieved_order['status'] = new_status
+        self.storage.save_order(order_id, retrieved_order)
+
+        return retrieved_order
 
     def list_all_orders(self):
-        pass
+        if self.storage.get_all_orders():
+            return self.storage.get_all_orders()
+        raise ValueError("Order list is empty")
 
     def list_orders_by_status(self, status: str):
-        pass
+        all_orders = self.storage.get_all_orders()
+
+        orders = [
+            order for order in all_orders.values()
+                  if order.get("status") == status
+                ]
+        
+        if not orders:
+            raise ValueError(f"Don't have any order with status '{status}'.")
+        
+        return orders
