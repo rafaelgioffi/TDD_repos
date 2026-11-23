@@ -49,9 +49,16 @@ class OrderTracker:
         return retrieved_order
 
     def list_all_orders(self):
-        if self.storage.get_all_orders():
-            return self.storage.get_all_orders()
-        raise ValueError("Order list is empty")
+        orders = self.storage.get_all_orders()
+
+        if not orders:
+        # self.storage.get_all_orders():
+            # return self.storage.get_all_orders()
+        ### Correction for listing in front-end... ###
+            raise ValueError("Order list is empty")
+        
+        return list(orders.values())
+
 
     def list_orders_by_status(self, status: str):
         all_orders = self.storage.get_all_orders()
